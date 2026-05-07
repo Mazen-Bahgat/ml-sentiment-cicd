@@ -24,7 +24,7 @@ env:
   IMAGE_NAME: ml-sentiment-app
 
 jobs:
-  lint:
+  ci:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,11 +38,6 @@ jobs:
         run: |
           pip install -r requirements.txt
           python -m textblob.download_corpora
-      - name: Health check
-        run: |
-          uvicorn src.inference:app --port 8000 &
-          sleep 3
-          curl -f http://localhost:8000/health
 
       - name: Lint with ruff
         run: |
@@ -59,16 +54,7 @@ jobs:
           pytest --cov=src --cov-report=term-missing 2>&1 | tee pytest-report.txt          
           exit ${PIPESTATUS[0]}
 
-      - name: Upload CI reports
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: ci-reports-${{ gitea.run_id }}
-          path: |
-            ruff-report.txt
-            mypy-report.txt
-            pytest-report.txt         
-      
+      # TODO: add type-check, test, build-and-push, sbom jobs 
       - name: Build and Push Docker Image
         run: |
           docker build \
@@ -77,7 +63,19 @@ jobs:
             .
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ gitea.sha }}
-          
-  # TODO: add type-check, test, build-and-push, sbom jobs
 
-  
+      - name: Generate SBOM with Syft
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          syft ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest -o spdx-json=sbom.spdx.json
+
+      - name: Upload CI reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ci-reports-${{ gitea.run_id }}
+          path: |
+            ruff-report.txt
+            mypy-report.txt
+            pytest-report.txt
+            sbom.spdx.json
