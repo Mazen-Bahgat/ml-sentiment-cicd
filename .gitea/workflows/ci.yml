@@ -43,4 +43,16 @@ jobs:
           uvicorn src.inference:app --port 8000 &
           sleep 3
           curl -f http://localhost:8000/health
+
+      - name: Lint with ruff
+        run: |
+          ruff check src/ tests/ 2>&1 | tee ruff-report.txt
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload CI reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ci-reports-${{ gitea.run_id }}
+          path: ruff-report.txt
   # TODO: add type-check, test, build-and-push, sbom jobs
