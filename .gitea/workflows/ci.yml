@@ -63,4 +63,20 @@ jobs:
           path: |
              ruff-report.txt
              mypy-report.txt
+      
+      - name: Run tests with pytest
+        run: |
+          pytest --cov=src --cov-report=term-missing 2>&1 | tee pytest-report.txt          
+
+      - name: Upload CI reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ci-reports-${{ gitea.run_id }}
+          path: |
+            ruff-report.txt
+            mypy-report.txt
+            pytest-report.txt         
+      
+
   # TODO: add type-check, test, build-and-push, sbom jobs
