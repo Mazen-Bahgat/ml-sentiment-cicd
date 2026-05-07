@@ -56,3 +56,10 @@ jobs:
           name: ci-reports-${{ gitea.run_id }}
           path: ruff-report.txt
   # TODO: add type-check, test, build-and-push, sbom jobs
+    -name: type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
