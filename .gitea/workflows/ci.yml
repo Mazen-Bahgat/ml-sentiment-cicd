@@ -13,10 +13,14 @@
 name: CI Pipeline
 
 on:
-  # TODO: trigger on push and pull_request to main
+  push:
+    branches: [ main ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ main ]
 
 env:
-  REGISTRY: # TODO: set the registry address (see infrastructure table)
+  REGISTRY: localhost:5001
   IMAGE_NAME: ml-sentiment-app
 
 jobs:
@@ -26,4 +30,17 @@ jobs:
       - uses: actions/checkout@v4
       # TODO: setup python, install dependencies, run ruff
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          python -m textblob.download_corpora
+      - name: Health check
+        run: |
+          uvicorn src.inference:app --port 8000 &
+          sleep 3
+          curl -f http://localhost:8000/health
   # TODO: add type-check, test, build-and-push, sbom jobs
