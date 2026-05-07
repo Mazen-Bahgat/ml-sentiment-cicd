@@ -18,9 +18,8 @@ class PredictResponse(BaseModel):
     confidence: float
 
 
-@app.get("/health")
-def health():
-    return {"status": "healthy"}
+@app.post("/predict", response_model=PredictResponse)
+def predict(request: PredictRequest) -> PredictResponse:
 
 
 @app.post("/predict", response_model=PredictResponse)

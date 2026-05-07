@@ -14,7 +14,7 @@ def clean_text(text: str) -> str:
     return text
 
 
-def validate_input(text) -> bool:
+def validate_input(text: str) -> bool:
     """Validate that input is a non-empty string."""
     if not isinstance(text, str):
         return False
