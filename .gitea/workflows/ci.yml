@@ -49,17 +49,18 @@ jobs:
           ruff check src/ tests/ 2>&1 | tee ruff-report.txt
           exit ${PIPESTATUS[0]}
 
+      - name: Run mypy
+        run: |
+          mypy src/ 2>&1 | tee mypy-report.txt
+          exit ${PIPESTATUS[0]}
+
+
       - name: Upload CI reports
         if: always()
         uses: actions/upload-artifact@v3
-        with:
+        with: 
           name: ci-reports-${{ gitea.run_id }}
-          path: ruff-report.txt
+          path: |
+             ruff-report.txt
+             mypy-report.txt
   # TODO: add type-check, test, build-and-push, sbom jobs
-    -name: type-check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
